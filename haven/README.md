@@ -53,3 +53,41 @@ panic!("{}", "Insufficient arguments".red());
 
 ![](./images/colorize_1.png)
 ![](./images/colorize_2.png)
+
+## 20240608
+
+#### 에러의 처리
+
+오랜만에 봐서 생각나지 않았는데 굳이 Ok일 때 리턴할 게 없다면 그냥 `if let`을 사용하는 게 조금 더 코드를 이해하기 쉬운 것 같다.
+
+아래의 두 if 문은 동일하다.
+
+```rust
+if let Err(e) = grep(input) {
+    println!("Problem reading the file: {}", e.to_string().red());
+    process::exit(1);
+}
+
+grep(input).unwrap_or_else(|e| {
+    println!("Problem reading the file: {}", e.to_string().red());
+    process::exit(1);
+});
+```
+
+#### Testing
+
+- 별도의 테스트 파일을 작성하려면 `tests`라는 폴더 아래에 넣어야 한다.
+
+  ![](./images/test_1.png)
+
+  - 별도의 tests 폴더에 넣는 것은 (공식 문서에서 얘기하는 바에 따르면) 보통 integration test를 위한 것이다.
+    - [ripgrep - tests/regression.rs](https://github.com/BurntSushi/ripgrep/blob/master/tests/regression.rs#L5)
+
+- 각각의 함수 또는 feature에 대한 유닛 테스트 코드들은 해당 소스파일에 같이 넣는다.
+
+  - [grep-printer - json.rs](https://github.com/BurntSushi/ripgrep/blob/master/crates/printer/src/json.rs#L871)
+  - 명확한 룰이 있다고 보긴 어려워 보이는게, repository마다 가끔 뒤죽박죽 인 것 같기도 하고 소스 코드 자체가 길어지다보면 문제가 생길 것 같기도 하다. 그런데 scope를 제한 하는 것이 언어의 기본 성격이라서 그런가? 많은 repository가 이 룰을 따르고 있는 중.
+
+  ![](./images/test_2.png)
+
+#### 매개변수와 함수의 lifetime
