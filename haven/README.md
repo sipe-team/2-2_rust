@@ -90,4 +90,104 @@ grep(input).unwrap_or_else(|e| {
 
   ![](./images/test_2.png)
 
-#### 매개변수와 함수의 lifetime
+## 20240618
+
+#### 세미콜론 지옥
+
+아래와 같은 코드 때문에 왜 안되는 것인지 찾다가 생각보다 애먹었다...
+
+```rust
+let results = if input.ignore_case {
+    search_case_insensitive(&input.query, &file_contents);
+} else {
+    search(&input.query, &file_contents);
+};
+```
+
+![](./images/semicolon.png)
+
+지금와서 보면 너무 당연한데 세미콜론으로 이런 일이 벌어지다니... rust에서는 세미콜론을 생략하여 바로 return의 형태로 만드는 문법이라는 것을 망각했다. `let = if` 문에서도 동일하게 세미콜론을 붙이면 단순 실행이다 ㅠ
+
+정확한 코드는 세미콜론을 떼서 `results`에 Vec<&str>을 넣는 것.
+
+```rust
+let results = if input.ignore_case {
+    search_case_insensitive(&input.query, &file_contents)
+} else {
+    search(&input.query, &file_contents)
+};
+```
+
+## 20240702
+
+#### Iterator를 직접 넘겨서 복사하지 않고도 값의 접근만 가능하도록 하기
+
+기본적으로 `env::args()` 의 반환타입은 Iterator이다. 13장에 오기 전까지는 clone()을 가지고 복사해서 사용하도록 예제코드가 구성되어 있었는데 반복자를 사용하면서 이를 피하고, Input option을 바로 만들어낼 수 있도록 한다.
+
+아래는 iterator를 쓰기 전의 코드이고, collect를 통해 매개변수를 벡터로 바꾼다. 그리고 reference로 넘긴 뒤 clone을 하도록 한다.
+
+```rust
+let args: Vec<String> = env::args().collect();
+let input = Input::build(&args).unwrap_or_else(|err| {
+}
+```
+
+이제 `env::args()`를 직접 매개변수로 넘긴 뒤, trait으로 정하여 확장성을 높인다. `impl Iterator<Item = String>` 이라는 문법이 꽤나 예쁜데, Iterator trait을 구현하고 element가 string인 모든 매개변수는 받을 수 있다는 것을 정말 깔끔하게 표현하기 때문이다. 뭐... 다른 언어에도 비슷하게 있겠지만 편애를 조금 해보겠다.
+
+```rust
+let input = Input::build(env::args()).unwrap_or_else(|err| {
+}
+
+pub fn build(
+        mut args: impl Iterator<Item = String>,
+    ) -> Result<Input, &'static str> {
+}
+```
+
+또한 search 함수도 아주 간결하게 바꾸는데 Java의 Stream도 비슷하게 구현되어 있을 것 같다.
+
+```rust
+let mut results = Vec::new();
+
+for line in contents.lines() {
+    if line.contains(query) {
+        results.push(line);
+    }
+}
+
+results
+```
+
+요게 이렇게 바뀌었습니다.
+
+```rust
+contents
+    .lines()
+    .filter(|line| line.contains(query))
+    .collect()
+```
+
+#### Clap
+
+위에 했던 모든 것들이 사실상 clap을 만들어보는 과정이었다. Clap 하나로 모두 정리되었다.
+
+clap::Parser를 import 한 다음 struct 자체를 derive 시키면 `parse` 함수를 사용할 수 있고, 자연스럽게 CLI 파라미터들을 바로 사용할 수 있게된다. 
+
+```rust
+use clap::Parser;
+
+#[derive(Parser)]
+pub struct Input {
+    query: String,
+    file_path: std::path::PathBuf,
+
+    #[arg(short = 's', long = "case-sensitive", default_value = "true")]
+    case_sensitive: bool,
+}
+```
+
+그렇게 한 뒤 바로 parse하면 모든 값에 대한 파싱이 끝난 struct를 얻게된다.
+
+```rust
+let input = Input::parse();
+```
