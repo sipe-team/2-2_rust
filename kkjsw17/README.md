@@ -1,6 +1,10 @@
 # kkjgrep
 [github](https://github.com/kkjsw17/kkjgrep)
 
+# 완성본
+![1](./images/1.png)
+![2](./images/2.png)
+
 ## 진행 경과
 ### 24.06.02
 - 12.1. 커맨드 라인 인수 받기 (✅)
