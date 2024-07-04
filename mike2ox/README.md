@@ -1,8 +1,10 @@
 # Project Repo
 
-- ![](./result/demo_mvp.gif)
-
 - [my-tiny-grep-by-rust](https://github.com/mike2ox/my-tiny-grep-by-rust)
+
+## Demo
+
+[![Video Label](https://img.youtube.com/vi/ZY4ICyNF9QE/0.jpg)](https://youtu.be/ZY4ICyNF9QE)
 
 > **result 폴더 안에 데모 원본 영상이 있습니다!**
 
