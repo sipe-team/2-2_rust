@@ -1,5 +1,9 @@
 # havengrep
 
+![](./images/command_list.png)
+
+![](./images/command_result.png)
+
 ## 20240607
 
 드디어 회사 일을 모두 끝내고 샌드위치 휴일이어서 휴가까지 쓴 금요일에 프로젝트 작업을 착수하였다.
